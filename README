@@ -1,0 +1,4 @@
+This is my first Python program.
+It will download photoes of the Celebs form http://www.hdwallpapers.in/ and save it in Celebs directory.
+Uncomment certain line to make the photos to be downloaded in the directory of the Celeb's name. 
+
