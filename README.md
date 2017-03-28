@@ -6,7 +6,11 @@ Uncomment certain line(84, 90) to make the photos to be downloaded in the direct
 
 
 Imager.py
-It will download the latest wallpaper in the `dirname`
+It will download the latest wallpaper in the `dirname`.
+
+
+ImageDownloader.py
+Program is self explanatory.
 
 
 LinuxG.py
