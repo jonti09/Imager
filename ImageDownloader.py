@@ -1,6 +1,6 @@
 """
 	Author          :   Viper
-	Version         :   1.0
+	Version         :   2.0
 	Description     :   This program downloads all the available Pictures in User defined resolution.
 	Usage           :   i.  Type in number to select the operation.
 						ii. Then select the resolution
@@ -9,11 +9,11 @@ import requests
 import os
 import urllib.request
 from bs4 import BeautifulSoup
+import time
 
 
 class Imager():
-	BASE_URL = 'http://www.hdwallpapers.in/'
-	URL = BASE_URL
+	BASE_URL = 'http://www.hdwallpapers.in'
 	COUNT = 0
 	DOWN = 0
 	SKIP = 0
@@ -28,17 +28,17 @@ class Imager():
 
 	#URL
 	OP = {
-		1: 'celebrities-desktop-wallpapers/',
-		2: '',
+		1: '/celebrities-desktop-wallpapers/',
+		2: '/',
 	}
 
 	# the dictionary for multiple resolution
 	RES = {
-		1:  '640 x 1136', 2:  '750 x 1334', 3:  '640 x 1136', 4:  '750 x 1334', 5:  '1080 x 1920',
-		6:  '360 x 640', 7:  '540 x 960', 8:  '720 x 1280', 9:  '1080 x 1920', 10: '480 x 800',
-		11: '768 x 1280', 12: '1280 x 800', 13: '1440 x 900', 14: '1680 x 1050', 15: '1920 x 1200', 
-		16: '2560 x 1600', 17: '2880 x 1800', 18: '1280 x 720', 19: '1366 x 768', 20: '1600 x 900',
-		21: '1920 x 1080', 22: '2560 x 1440',
+		1:  '640x1136', 2:  '750x1334', 3:  '640x1136', 4:  '750x1334', 5:  '1080x1920',
+		6:  '360x640', 7:  '540x960', 8:  '720x1280', 9:  '1080x1920', 10: '480x800',
+		11: '768x1280', 12: '1280x800', 13: '1440x900', 14: '1680x1050', 15: '1920x1200', 
+		16: '2560x1600', 17: '2880x1800', 18: '1280x720', 19: '1366x768', 20: '1600x900',
+		21: '1920x1080', 22: '2560x1440',
 	}
 
 	DIR = {
@@ -118,27 +118,17 @@ NOTE: Each page has 14 Images
 
 	# Function saves the image in the directory from the given url
 	def saveImage(self, link):
-		# get the href link
-		img = self.BASE_URL + link.split('/')[-1]
-		r = requests.get(img)
-
-		# parse the link
-		soup = BeautifulSoup(r.content, 'html.parser')
-
-		# find the url of given RES image size
+		# link is /blah_blah_blah-wallpapers.html format
+		# Making it into BASE_URL + /download + /blah_blah_blah-<RES>.html
 		try:
-			link = soup.find_all('a', attrs={'title': str(self.UInput['resolution'])})[0]
-
-			# get the image_url and img_name from the generated link
-			
-			img_url = self.BASE_URL + link['href'].split('/')[-2] + '/' + link['href'].split('/')[-1]
-			img_name = img_url.split('/')[-1]
+			img = self.BASE_URL + '/download/' + link.replace('wallpapers', str(self.UInput['resolution']))
+			img_name = img.split('/')[-1].split('.')[0] + '.jpg'
 
 			# download image if does not exist else skip it
 			if not os.path.exists(img_name):
 				try:
 					# actully save image
-					urllib.request.urlretrieve(img_url, img_name)
+					urllib.request.urlretrieve(img, img_name)
 					print('saved...')
 					self.DOWN += 1
 				except KeyboardInterrupt:
@@ -165,12 +155,15 @@ NOTE: Each page has 14 Images
 		self.makeDir("Imager")
 
 		# append the selected op to URL
-		self.URL += self.UInput['url']
 		for i in range(1, self.UInput['pages'] + 1):
 			# Change the URL on each iteration
-			self.URL += 'page/' + str(i)
-			print(self.URL)
-			req = requests.get(self.URL)
+			URL = self.BASE_URL + self.UInput['url'] + 'page/' + str(i)
+			try:
+				req = requests.get(URL)
+			except ConnectionError:
+				print('Can not connect to internet...')
+				input('Press ENTER to Exit...')
+				exit(1)
 
 			# if the requests is successful, then continue else show error and exit
 			if req.status_code == 200:
@@ -184,7 +177,14 @@ NOTE: Each page has 14 Images
 					celeb_name = celeb_link.find('p').text
 
 					# If separete dir, then make else continue....
-					dirname = celeb_name.split(' ')[0] + ' ' + celeb_name.split(' ')[1]
+					try:
+						dirname = celeb_name.split(' ')[0] + ' ' + celeb_name.split(' ')[1]
+					except IndexError:
+						print('Image Not Found... skipping it...')
+						self.ERROR += 1
+						self.COUNT +=1
+						continue
+
 					if self.UInput['dir']:
 						self.makeDir(dirname)
 					self.COUNT += 1
@@ -196,22 +196,21 @@ NOTE: Each page has 14 Images
 						os.chdir('..')
 
 			else:
-				print('Some error occured with %d code...exiting...' % req.status_code)
-				input('Enter any key to exit...')
-				exit(1)
+				self.ERROR += 1
+				print('Network Error...skipping the image...')
 
 
 print('Press ctrl + c to exit...')
 try:
 	obj = Imager()
 	obj.main()
-	print('%d Pics processed from which : \n%d Downloaded...,\n%d Skipped...\n%d had Error...' % (obj.COUNT, obj.DOWN, obj.SKIP, obj.ERROR))
+	print('%d Pics processed from which : \n%d Downloaded...,\n%d Skipped...,\n%d had Error...' % (obj.COUNT, obj.DOWN, obj.SKIP, obj.ERROR))
 except ValueError:
 	print('Did not provide correct value....exiting...')
-	input('Press any key to exit...')
+	input('Press ENTER to Exit...')
 	exit(1)	
 except KeyboardInterrupt:
 	print('Exiting...')
-	input('Press any key to exit...')
+	input('Press ENTER to Exit...')
 	exit(0)
 		
