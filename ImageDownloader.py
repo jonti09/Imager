@@ -1,9 +1,7 @@
 """
-	Author          :   Viper
+	Author          :   Jonti
 	Version         :   2.0
 	Description     :   This program downloads all the available Pictures in User defined resolution.
-	Usage           :   i.  Type in number to select the operation.
-						ii. Then select the resolution
 """
 import requests
 import os
